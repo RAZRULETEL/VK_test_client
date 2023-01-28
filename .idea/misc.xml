@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/arrow_left.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/fade.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/gradient.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/ic_baseline_arrow_back_24.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/ic_baseline_arrow_back_24_white.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/nice_border.xml" value="0.25" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/ripple.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/round_back.xml" value="0.2525" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/shadow.xml" value="0.2705" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/unread_back.xml" value="0.282" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/drawable/unread_ripple.xml" value="0.28177083333333336" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_fullscreen_image.xml" value="0.25" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_main.xml" value="0.28541666666666665" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_msg.xml" value="0.264" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_settings.xml" value="0.30614525139664805" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/fragment_news.xml" value="0.2246376811594203" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

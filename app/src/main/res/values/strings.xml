@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">VK_test_mod</string>
+    <string name="token">VK_api_token</string>
+    <string name="title_activity_fullscreen_image">FullscreenImage</string>
+    <string name="this_id">216663221</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>0
+</resources>
