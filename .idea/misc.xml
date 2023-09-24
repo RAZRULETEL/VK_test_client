@@ -18,11 +18,13 @@
         <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_main.xml" value="0.28541666666666665" />
         <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_msg.xml" value="0.264" />
         <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/activity_settings.xml" value="0.30614525139664805" />
-        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/fragment_news.xml" value="0.2246376811594203" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/fragment_dialogs.xml" value="0.2246376811594203" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/fragment_news.xml" value="0.536" />
+        <entry key="..\:/Users/RAZRULETEL/AndroidStudioProjects/VK_test_mod/app/src/main/res/layout/fragment_settings.xml" value="0.1" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" project-jdk-name="17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

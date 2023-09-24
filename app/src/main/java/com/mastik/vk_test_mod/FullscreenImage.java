@@ -1,36 +1,49 @@
 package com.mastik.vk_test_mod;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewPropertyAnimator;
 import android.view.WindowInsets;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator;
 
+import com.mastik.vk_test_mod.dataTypes.VKImage;
+import com.mastik.vk_test_mod.dataTypes.attachments.Photo;
+import com.mastik.vk_test_mod.dataTypes.attachments.PhotoSize;
 import com.mastik.vk_test_mod.databinding.ActivityFullscreenImageBinding;
+import com.mastik.vk_test_mod.db.AppDatabase;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- */
+import timber.log.Timber;
+
 public class FullscreenImage extends AppCompatActivity {
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -122,28 +135,23 @@ public class FullscreenImage extends AppCompatActivity {
     };
     private ActivityFullscreenImageBinding binding;
     private ScaleGestureDetector scaleGestureDetector;
-    private float mScaleFactor = 1.0f;
-
-    float[] lastEvent = null;
-    float d = 0f;
-    float newRot = 0f;
+    float mEventInitialRotation = 0f;
     private boolean isZoomAndRotate;
     private boolean isOutSide;
     private static final int NONE = 0;
     private static final int DRAG = 1;
     private static final int ZOOM = 2;
     private int mode = NONE;
-    private PointF start = new PointF();
-    private PointF mid = new PointF();
-    float oldDist = 1f, raw_x, raw_y;
-    private float xCoOrdinate, yCoOrdinate;
-    private float border_y_correction, border_x_correction;
+    private final PointF mEventStartPosition = new PointF();
+    float mEventPointersOffset = 1f;
+    private float xCoordinate, yCoordinate;
+    private Photo mCurrentPhoto;
+    private float mImageRectangleAngle = 0;
+    private int mScreenWidth, mScreenHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
 
         binding = ActivityFullscreenImageBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -151,6 +159,13 @@ public class FullscreenImage extends AppCompatActivity {
         mVisible = true;
         mControlsView = binding.fullscreenContentControls;
         mContentView = binding.fullscreenContent;
+
+        MainActivity.BACKGROUND_THREADS.execute(() -> {
+            mCurrentPhoto = Photo.getFromEntity(AppDatabase.getInstance(getApplicationContext()).getPhotoDAO().getPhotoById(getIntent().getIntExtra("id", 0)));
+            PhotoSize maxCacheSize = mCurrentPhoto.getCachedPaths().keySet().stream().max(Comparator.comparingInt(PhotoSize::getMaxSideSize)).get();
+            renderBitmapContent(readBitmap(mCurrentPhoto.getCachedPaths().get(maxCacheSize)));
+        });
+
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -175,29 +190,81 @@ public class FullscreenImage extends AppCompatActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
-        ImageButton imageView = findViewById(R.id.dummy_button);
-        ImageButton reset = findViewById(R.id.setDefault);
-        ImageView fsc_cont = findViewById(R.id.fullscreenContent);
-        Bitmap image = readBitmap(getIntent().getStringExtra("img"));
-        System.out.println(getIntent().getStringExtra("img"));
-        fsc_cont.setImageBitmap(image);
-        DisplayMetrics display = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(display);
-        border_y_correction = (float)display.heightPixels/(image.getHeight()*((float)display.widthPixels/image.getWidth()));
-        border_x_correction = (float)display.widthPixels/(image.getWidth()*((float)display.heightPixels/image.getHeight()));
+        binding.backButton.setOnTouchListener(mDelayHideTouchListener);
 
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
+        ImageButton imageView = binding.backButton;
+        ImageButton reset = binding.resetTransform;
+
+        imageView.setOnClickListener(view -> finish());
+        reset.setOnClickListener(view -> {
+            mContentView.setPivotX(mContentView.getWidth() / 2f);
+            mContentView.setPivotY(mContentView.getHeight() / 2f);
+            mContentView
+                    .animate().translationX(0).translationY(0).scaleX(1).scaleY(1).rotation(0)
+                    .setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
         });
-        reset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mContentView.animate().x(0).y(0).scaleX(1).scaleY(1).rotation(0).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
-            }
+
+        binding.settingsButton.setOnClickListener(view -> {
+            PopupMenu menu = new PopupMenu(getApplicationContext(), binding.settingsButton);
+            menu.inflate(R.menu.fullscreen_settings);
+            menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    if (item.getItemId() == R.id.sizes) {
+                        AlertDialog.Builder b = new AlertDialog.Builder(FullscreenImage.this);
+                        PhotoSize[] sortedSizes = Arrays.stream(mCurrentPhoto.getVKSizes())
+                                .sorted((vkSize1, vkSize2) -> Integer.compare(mCurrentPhoto.getWidth(vkSize1), mCurrentPhoto.getWidth(vkSize2)))
+                                .toArray(PhotoSize[]::new);
+                        String[] types = Arrays.stream(sortedSizes)
+                                .map(vkSize -> vkSize.name() + " - " + mCurrentPhoto.getWidth(vkSize) + " x " + mCurrentPhoto.getHeight(vkSize) + (vkSize.isCropping() ? " cropped" : "") + (mCurrentPhoto.getCachedPaths().get(vkSize) != null ? " - current" : ""))
+                                .toArray(String[]::new);
+                        b.setItems(types, (dialog, chosenIndex) -> {
+                            if (mCurrentPhoto.getCachedPaths().get(sortedSizes[chosenIndex]) == null)
+                                dialog.dismiss();
+                            else
+                                return;
+
+                            String url = mCurrentPhoto.getUrl(sortedSizes[chosenIndex]);
+
+                            MainActivity.BACKGROUND_THREADS.execute(() -> {
+                                VKImage.get(url, mCurrentPhoto.getId(), getApplicationContext())
+                                        .clearInitListeners()
+                                        .forceInit(getApplicationContext())
+                                        .addOnInitListener(image -> {
+                                            renderBitmapContent(image.getImg());
+                                            MainActivity.BACKGROUND_THREADS.execute(() -> mCurrentPhoto.setCachedSize(sortedSizes[chosenIndex], image.getSavePath()));
+                                        });
+                            });
+                        });
+
+                        b.show();
+
+                        return true;
+                    }
+                    if (item.getItemId() == R.id.download) {
+                        
+                        return true;
+                    }
+                    if (item.getItemId() == R.id.copy_link){
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        clipboard.setPrimaryClip(ClipData.newPlainText("VK Photo link", mCurrentPhoto.getUrl(mCurrentPhoto.getCachedPaths().keySet().stream().max(Comparator.comparingInt(PhotoSize::getMaxSideSize)).get())));
+                        return true;
+                    }
+                    if(item.getItemId() == R.id.share){
+                        Intent imageIntent = new Intent(android.content.Intent.ACTION_SEND);
+//                        imageIntent.putExtra(android.content.Intent.EXTRA_TEXT, "test");
+                        imageIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        imageIntent.setType("image/jpeg");
+                        Uri image = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", new File(getCacheDir(), mCurrentPhoto.getCachedPaths().values().stream().filter(path -> path != null).findAny().get()));
+                        imageIntent.putExtra(Intent.EXTRA_STREAM, image);
+                        startActivity(Intent.createChooser(imageIntent, "Send image"));
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            menu.show();
+
         });
     }
 
@@ -241,7 +308,7 @@ public class FullscreenImage extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= 30) {
             mContentView.getWindowInsetsController().show(
                     WindowInsets.Type.statusBars()
-                            //| WindowInsets.Type.navigationBars()
+                    //| WindowInsets.Type.navigationBars()
             );
         } else {
             mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -262,122 +329,105 @@ public class FullscreenImage extends AppCompatActivity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
-    private Bitmap readBitmap(String name)
-    {
+
+    private Bitmap readBitmap(String name) {
         Bitmap bitmap;
-        try
-        {
-            File f = new File(getCacheDir(),name + ".png");
+        try {
+            File f = new File(getCacheDir(), name);
             FileInputStream fin = new FileInputStream(f);
             bitmap = BitmapFactory.decodeStream(fin);
             fin.close();
             return bitmap;
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
-    float last_p_x, last_p_y;
+
     private void viewTransformation(View view, MotionEvent event) {
+        Timber.v("translationX: %f, translationY: %f, pivotX: %f, pivotY: %f, eventX: %f, rawEventX: %f", view.getTranslationX(), view.getTranslationY(), view.getPivotX(), view.getPivotY(), event.getX(), event.getRawX());
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                xCoOrdinate = view.getX() - event.getRawX();
-                yCoOrdinate = view.getY() - event.getRawY();
+                xCoordinate = view.getTranslationX() - event.getRawX();
+                yCoordinate = view.getTranslationY() - event.getRawY();
 
-                start.set(view.getX(), view.getY());
+                mEventStartPosition.set(view.getTranslationX(), view.getTranslationY());
                 isOutSide = false;
                 mode = DRAG;
-                lastEvent = null;
+                PointF mRotationCenter = null;
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                oldDist = spacing(event);
-                if (oldDist > 10f) {
-                    midPoint(mid, event);
+                mEventPointersOffset = spacing(event);
+                if (mEventPointersOffset > 10f) {
                     mode = ZOOM;
-
-                    if(isOutSide){
-                        view.setPivotX(last_p_x);
-                        view.setPivotY(last_p_y);
-
-                    }else{
-                        view.setPivotX((event.getX(0)+event.getX(1))/2);
-                        view.setPivotY((event.getY(0)+event.getY(1))/2);
-                    }
-                    last_p_x = view.getPivotX();
-                    last_p_y = view.getPivotY();
+//                    PointF point = centerPoint(event);//Pivot recalculates scale and rotation and jumps, need to find rotating offset to make this works correctly
+//                    view.setTranslationX(view.getTranslationX() + (view.getPivotX() - point.x) * (1 - view.getScaleX()));
+//                    view.setTranslationY(view.getTranslationY() + (view.getPivotY() - point.y) * (1 - view.getScaleY()));
+//                    view.setPivotX(point.x);
+//                    view.setPivotY(point.y);
                 }
 
 
-                lastEvent = new float[4];
-                lastEvent[0] = event.getX(0);
-                lastEvent[1] = event.getX(1);
-                lastEvent[2] = event.getY(0);
-                lastEvent[3] = event.getY(1);
-                d = rotation(event);
+                mEventInitialRotation = rotation(event);
                 break;
             case MotionEvent.ACTION_UP:
-                //view.performClick();
                 isZoomAndRotate = false;
-                //while(view.getX() != src_x && view.getY() != src_y)
-                if(view.getScaleX() < 1 || view.getScaleY() < 1)
-                    view.animate().x(raw_x).y(raw_y).scaleX(1).scaleY(1).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
+                if (view.getScaleX() < 1 || view.getScaleY() < 1)
+                    view.animate().translationX(0).translationY(0).scaleX(1).scaleY(1).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
                 else {
-                    float nearest_border_x = view.getWidth()*(view.getScaleX()-1);
-                    float nearest_border_y = view.getHeight()*(view.getScaleY()-1)/(border_y_correction*view.getScaleY()*view.getScaleY());
-                    //Toast.makeText(getApplicationContext(),nearest_border_x+" "+nearest_border_y+"\n"+view.getX()+" "+view.getY(), Toast.LENGTH_SHORT).show();
-                    if(view.getX() >= nearest_border_x || view.getX() <= -nearest_border_x){
-                        if(view.getY() >= nearest_border_y || view.getY() <= -nearest_border_y){
-                            view.animate().x(nearest_border_x*plusMinus(view.getX())).y(nearest_border_y*plusMinus(view.getY())).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
-                        }else
-                            view.animate().x(nearest_border_x*plusMinus(view.getX())).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
-                    }else{
-                        if(view.getY() >= nearest_border_y || view.getY() <= -nearest_border_y)
-                            view.animate().y(nearest_border_y*plusMinus(view.getY())).setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
-                    }
+                    double currentAngle = (view.getRotation() % 360) / 180 * Math.PI;
+
+                    double diagonal = Math.sqrt(Math.pow(view.getWidth() * view.getScaleX(), 2) + Math.pow(view.getHeight() * view.getScaleY(), 2));
+                    float rotatedWidth = (float) Math.abs(diagonal * Math.cos((Math.abs(currentAngle) < Math.PI / 2 ? currentAngle : Math.PI - currentAngle) - mImageRectangleAngle));
+                    float rotatedHeight = (float) Math.abs(diagonal * Math.sin((Math.abs(currentAngle) > Math.PI / 2 ? currentAngle : Math.PI - currentAngle) - mImageRectangleAngle));
+
+
+                    binding.textView7.getLayoutParams().width = ((int) rotatedWidth);
+
+                    float borderX = Math.max((rotatedWidth - mScreenWidth) / 2, 0);
+                    float borderY = Math.max((rotatedHeight - mScreenHeight) / 2, 0);
+                    ViewPropertyAnimator animator = view.animate();
+                    if (Math.abs(view.getTranslationX()) > borderX)
+                        animator.translationX(view.getTranslationX() > 0 ? borderX : -borderX);
+                    if (Math.abs(view.getTranslationY()) > borderY)
+                        animator.translationY(view.getTranslationY() > 0 ? borderY : -borderY);
+                    animator.setDuration(300).setInterpolator(new LinearOutSlowInInterpolator()).start();
                 }
-                if(view.getRotation() > 360)
-                    view.animate().rotation(view.getRotation()-360).setDuration(300);
                 if (mode == DRAG) {
-                    float x = event.getX();
-                    float y = view.getY();
-                    if(start.y - y > 800  && view.getScaleY() <= 1.1f){
+                    float y = view.getTranslationY();
+                    if (mEventStartPosition.y - y > 800 && view.getScaleY() <= 1.1f) {
                         finish();
                     }
                 }
             case MotionEvent.ACTION_OUTSIDE:
-                view.setPivotX(last_p_x);
-                view.setPivotY(last_p_y);
                 isOutSide = true;
                 mode = NONE;
-                lastEvent = null;
             case MotionEvent.ACTION_POINTER_UP:
+//                view.setTranslationX(view.getTranslationX() + (view.getPivotX() - view.getWidth() / 2f) * (1 - view.getScaleX()));
+//                view.setTranslationY(view.getTranslationY() + (view.getPivotY() - view.getHeight() / 2f) * (1 - view.getScaleY()));
+//                view.setPivotX(view.getWidth() / 2f);
+//                view.setPivotY(view.getHeight() / 2f);
                 mode = NONE;
-                lastEvent = null;
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (!isOutSide) {
                     if (mode == DRAG) {
                         isZoomAndRotate = false;
-                        view.animate().x(event.getRawX() + xCoOrdinate).y(event.getRawY() + yCoOrdinate).setDuration(0).start();
-                        float y = view.getY();
-                        if(start.y - y > 400 && view.getScaleY() <= 1.1f){
+                        view.animate().translationX(event.getRawX() + xCoordinate).translationY(event.getRawY() + yCoordinate).setDuration(0).start();
+                        float y = view.getTranslationY();
+                        if (mEventStartPosition.y - y > 400 && view.getScaleY() <= 1.1f) {
                             finish();
                         }
                     }
                     if (mode == ZOOM && event.getPointerCount() == 2) {
-
-                        float newDist1 = spacing(event);
-                        if (newDist1 > 10f) {
-                            float scale = newDist1 / oldDist * view.getScaleX();
+                        float newOffset = spacing(event);
+                        if (newOffset > 10f) {
+                            float scale = newOffset / mEventPointersOffset * view.getScaleX();
                             view.setScaleX(scale);
                             view.setScaleY(scale);
                         }
-                        if (lastEvent != null) {
-                            newRot = rotation(event);
-                            view.setRotation((float) (view.getRotation() + (newRot - d)));
-                        }
+                        view.setRotation((float) (view.getRotation() + (rotation(event) - mEventInitialRotation)));
+
                     }
                 }
                 break;
@@ -397,15 +447,26 @@ public class FullscreenImage extends AppCompatActivity {
         return (int) Math.sqrt(x * x + y * y);
     }
 
-    private void midPoint(PointF point, MotionEvent event) {
+    private PointF centerPoint(MotionEvent event) {
+        PointF center = new PointF();
         float x = event.getX(0) + event.getX(1);
         float y = event.getY(0) + event.getY(1);
-        point.set(x / 2, y / 2);
+        center.set(x / 2, y / 2);
+        return center;
     }
-    private int plusMinus(float number){
-        if(number<0)
-            return -1;
-        else
-            return 1;
+
+    private void renderBitmapContent(Bitmap image) {
+        if (image == null)
+            return;
+        DisplayMetrics display = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(display);
+        binding.fullscreenContent.post(() -> {
+            binding.fullscreenContent.setImageBitmap(image);
+            binding.fullscreenContent.getLayoutParams().height = (int) (image.getHeight() * ((float) display.widthPixels / image.getWidth()));
+        });
+        mImageRectangleAngle = (float) (Math.atan2(image.getHeight(), image.getWidth()));
+
+        mScreenWidth = display.widthPixels;
+        mScreenHeight = display.heightPixels;
     }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VK_test_mod</string>
+    <string name="frequency">Frequency</string>
+    <string name="scale">Scale</string>
+    <string name="speed">Speed</string>
+    <string name="darkening">Darkening</string>
+    <string name="gradient">Gradient</string>
+</resources>

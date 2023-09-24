@@ -1,25 +1,9 @@
-package com.mastik.vk_test_mod;
-
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+package com.mastik.vk_test_mod.deprecated;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class Settings extends AppCompatActivity {
-    private boolean isSetting = false;
+   /* private boolean isSetting = false;
     private LinearLayout[] settings_layouts;
     private DisplayMetrics displayMetrics;
     private FrameLayout menu;
@@ -113,5 +97,5 @@ public class Settings extends AppCompatActivity {
             isSetting = false;
         }else
             finish();
-    }
+    }*/
 }

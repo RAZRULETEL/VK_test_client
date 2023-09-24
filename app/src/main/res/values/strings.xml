@@ -1,9 +1,16 @@
 <resources>
     <string name="app_name">VK_test_mod</string>
-    <string name="token">VK_api_token</string>
-    <string name="title_activity_fullscreen_image">FullscreenImage</string>
-    <string name="this_id">216663221</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>0
+    <string name="default_user_fields" translatable="false">photo,last_seen,is_friend,sex,screen_name</string>
+    <string name="frequency">Частота</string>
+    <string name="scale">Масштаб</string>
+    <string name="speed">Скорость</string>
+    <string name="darkening">Затемнение</string>
+    <string name="gradient">Градиент</string>
+    <string name="title_activity_fullscreen_image" translatable="false">Fullscreen</string>
+    <string name="title_activity_web_view" translatable="false">WebView</string>
+    <string name="tok" translatable="false">vk1.a.TGILN9EdVSyc_X9BPWLY534HHwsG9lM-0YconXSycRvY96K37D4XYk7iWbHQ9p12BGvA3y9u_e6YmjvZUVI9zsavTVku3oOP2YCXLznF7MPi3ZWrC9v_QZ-KUmpSamNwC1kcB4QIxRAHYEznOlZa6YeRkXP_D7iwySdUH_XO6BJzYSSuvFRtNYySEWHe_6Sze9AIXKQiGWTg2qvf6JpCcg</string>
+    <string name="fullscreen_sizes">Размеры</string>
+    <string name="download">Загрузить</string>
+    <string name="share">Отправить</string>
+    <string name="copy_link">Скопировать ссылку</string>
 </resources>

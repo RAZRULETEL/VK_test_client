@@ -1,4 +1,4 @@
-package com.mastik.vk_test_mod;
+package com.mastik.vk_test_mod.polling;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -20,6 +20,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.mastik.vk_test_mod.MainActivity;
+import com.mastik.vk_test_mod.MessagesActivity;
+import com.mastik.vk_test_mod.R;
+import com.mastik.vk_test_mod.dataTypes.VKImage;
+import com.mastik.vk_test_mod.dataTypes.VKUser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,11 +39,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+import timber.log.Timber;
+
 public class NotificationService extends Service {
     private static String token, this_id;
-    public static final String NOTIFICATION_CHANNEL_ID = "Новое сообщение";
     public final static String message_channel = "message", status_channel = "status";
-    private int notif_id;
+    private int notification_id;
     String TAG = "Timers";
     @Override
     public IBinder onBind (Intent arg0) {return null;}
@@ -51,15 +57,15 @@ public class NotificationService extends Service {
     }
     @Override
     public void onCreate () {
-        Log. e ( TAG , "onCreate "+tag+"qwe") ;
-        //Toast.makeText(getApplicationContext(), "Start", Toast.LENGTH_SHORT).show();
-        notif_id = (int)System.currentTimeMillis();
+        Timber.tag(TAG).e("Run notification service");
+
+        notification_id = (int)System.currentTimeMillis();
         NotificationCompat.Builder notif_g = new NotificationCompat.Builder(getApplicationContext(), status_channel)
                 .setContentTitle("Онлайн")
-                .setSmallIcon(R.drawable.ricardo1)
+                .setSmallIcon(R.drawable.ricardo)
                 .setAutoCancel(true)
                 .setSilent(true);
-        this.startForeground(notif_id, notif_g.build());
+        this.startForeground(notification_id, notif_g.build());
         LongPollService.setErrorListener(new LongPollService.longPollServiceError() {
             @Override
             public void onError(String error) {
@@ -68,11 +74,11 @@ public class NotificationService extends Service {
                         .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(error)
                         .setBigContentTitle("Ошибка"));
-                startForeground(notif_id, notif_g.build());
+                startForeground(notification_id, notif_g.build());
             }
         });
-        token = getResources().getString(R.string.token);
-        this_id = getResources().getString(R.string.this_id);
+        token = MainActivity.getToken();
+        this_id = MainActivity.getCurrentUserId()+"";
         if(!LongPollService.isActive())
             getLongPollServer(token);
 
@@ -82,7 +88,7 @@ public class NotificationService extends Service {
             public void onNewEvent(JSONArray update) {
                 notif_g.setContentTitle("Онлайн");
                 notif_g.setContentText("");
-                startForeground(notif_id, notif_g.build());
+                startForeground(notification_id, notif_g.build());
                 try {
                     /*update.put(0, new JSONArray());
                     update.getJSONArray(0).put(0, "4");
@@ -101,7 +107,7 @@ public class NotificationService extends Service {
                             else
                                 from_id = update.getJSONArray(i).get(3).toString();
                             if((Integer.parseInt(update.getJSONArray(i).get(2).toString()) & 2) != 0)
-                                from_id = String.valueOf(MainActivity.owner_id);
+                                from_id = String.valueOf(MainActivity.getCurrentUserId());
                             //                        JSONObject message = new JSONObject();
                             //                        if((Integer.parseInt(update.getJSONArray(i).get(2).toString()) & 2) == 0)
                             //                            message.put("out", "1");
@@ -120,7 +126,7 @@ public class NotificationService extends Service {
                                 if(logo == null)
                                     logo = MainActivity.getBitmapFromURL("https://vk.com/images/camera_50.png");*/
                                 //createNotification(title, update.getJSONArray(i).get(5).toString(), logo);
-                                chatNotif(String.valueOf(peer_id), update.getJSONArray(i).get(5).toString(), from_id, update.getJSONArray(i).get(1).toString());
+                                chatNotification(String.valueOf(peer_id), update.getJSONArray(i).get(5).toString(), from_id, update.getJSONArray(i).get(1).toString());
                             }else {
                                 JSONObject profile = new JSONObject(readSourceData("user_"+from_id));
                                 JSONObject prvt_chat_name = new JSONObject(readSourceData("user_"+peer_id));
@@ -152,11 +158,7 @@ public class NotificationService extends Service {
     }
     @Override
     public void onDestroy () {
-        //stopForeground(true);
-
-        //Toast.makeText(getApplicationContext(), "Stop", Toast.LENGTH_LONG).show();
-        Log. e ( TAG , "onDestroy "+tag+"qwe") ;
-        //stopTimerTask() ;
+        Timber.tag(TAG).e("Destroy notification service");
 
         super.onDestroy() ;
     }
@@ -166,7 +168,7 @@ public class NotificationService extends Service {
         if(chat_name.equals(""))
             chat_name = from_name;
 
-        Bitmap chat_logo = MainActivity.readBitmap(chat_id, getApplicationContext());
+        Bitmap chat_logo = VKImage.get(null, Integer.parseInt(chat_id), VKUser.PREFIX, getApplicationContext()).getImg();
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService( NOTIFICATION_SERVICE );
 
@@ -174,7 +176,7 @@ public class NotificationService extends Service {
         for(StatusBarNotification not : mNotificationManager.getActiveNotifications())
             if(not.getNotification().getGroup().equals(chat_id))
                 is_first_in_group = false;
-        Intent intent = new Intent(NotificationService.this, msg.class);
+        Intent intent = new Intent(NotificationService.this, MessagesActivity.class);
         intent.putExtra("id", chat_id);
         intent.putExtra("chat_name", chat_name);
         intent.putExtra("chat_info", chat_info);
@@ -188,7 +190,7 @@ public class NotificationService extends Service {
 
         Notification notif_g = new NotificationCompat.Builder(getApplicationContext(), message_channel)
                 .setContentTitle(chat_name)
-                .setSmallIcon(R.drawable.ricardo1)
+                .setSmallIcon(R.drawable.ricardo)
                 .setLargeIcon(chat_logo)
                 .setGroupSummary(true)
                 .setGroup(chat_id)
@@ -204,7 +206,7 @@ public class NotificationService extends Service {
         NotificationCompat.Builder notif = new NotificationCompat.Builder(getApplicationContext(), message_channel)
                 .setContentTitle(from_name)
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ricardo1)
+                .setSmallIcon(R.drawable.ricardo)
                 .setLargeIcon(logo)
                 .setGroupSummary(false)
                 .setGroup(chat_id)
@@ -221,7 +223,7 @@ public class NotificationService extends Service {
 
 
     }
-    private void chatNotif(String peer_id, String text, String from_id, String msg_id){
+    private void chatNotification(String peer_id, String text, String from_id, String msg_id){
         String url ="https://api.vk.com/method/messages.getHistory?peer_id="+peer_id+"&access_token="+token+"&count=1&extended=1&start_message_id="+msg_id+"&v=5.131";
 
 
@@ -230,31 +232,32 @@ public class NotificationService extends Service {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        //Log.i("strt",msg_id+" "+from_id+" "+ response);
-                        try {
-                            JSONObject dialog = new JSONObject(response).getJSONObject("response").getJSONArray("conversations").getJSONObject(0);
-                            JSONArray profiles = new JSONObject(response).getJSONObject("response").getJSONArray("profiles");
-                            JSONObject profile = null;
-                            for(int i = 0; i < profiles.length(); i++) {
-                                writeData(profiles.getJSONObject(i).toString(), "user_" + profiles.getJSONObject(i).get("id"));
-                                if(profiles.getJSONObject(i).get("id").toString().equals(from_id))
-                                    profile = profiles.getJSONObject(i);
-                            }
-                            String title = profile.get("first_name")+" "+profile.get("last_name");
-                            Bitmap logo = MainActivity.readBitmap("user_" + from_id, getApplicationContext());
-                            if(logo == null) {
-                                if(profile.has("photo_50")) {
-                                    logo = MainActivity.getBitmapFromURL(profile.get("photo_50").toString());
-                                    if(logo != null)
-                                        writeData(logo, "user_"+from_id);
-                                } else
-                                    logo = MainActivity.getBitmapFromURL("https://vk.com/images/icons/im_multichat_50.png");
-                            }
-                            createNotification(title, dialog.getJSONObject("chat_settings").get("title").toString(), text, logo, peer_id, "");
+                        MainActivity.BACKGROUND_THREADS.execute(() -> {//Network on main thread
+                            try {
+                                JSONObject dialog = new JSONObject(response).getJSONObject("response").getJSONArray("conversations").getJSONObject(0);
+                                JSONArray profiles = new JSONObject(response).getJSONObject("response").getJSONArray("profiles");
+                                JSONObject profile = null;
+                                for (int i = 0; i < profiles.length(); i++) {
+                                    writeData(profiles.getJSONObject(i).toString(), "user_" + profiles.getJSONObject(i).get("id"));
+                                    if (profiles.getJSONObject(i).get("id").toString().equals(from_id))
+                                        profile = profiles.getJSONObject(i);
+                                }
+                                String title = profile.get("first_name") + " " + profile.get("last_name");
+                                Bitmap logo = MainActivity.readBitmap("user_" + from_id, getApplicationContext());
+                                if (logo == null) {
+                                    if (profile.has("photo_50")) {
+                                        logo = MainActivity.getBitmapFromURL(profile.get("photo_50").toString());
+                                        if (logo != null)
+                                            writeData(logo, "user_" + from_id);
+                                    } else
+                                        logo = MainActivity.getBitmapFromURL("https://vk.com/images/icons/im_multichat_50.png");
+                                }
+                                createNotification(title, dialog.getJSONObject("chat_settings").get("title").toString(), text, logo, peer_id, "");
 
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        });
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -319,7 +322,6 @@ public class NotificationService extends Service {
         }
     }
     public void getLongPollServer(String token){
-        //System.out.println("Timers, go");
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String poll ="https://api.vk.com/method/messages.getLongPollServer?access_token="+token+"&v=5.131";
 
@@ -334,8 +336,7 @@ public class NotificationService extends Service {
                                 String key = rsp.get("key").toString();
                                 LongPollService.server = server;
                                 LongPollService.key = key;
-                                LongPollService.start(Integer.parseInt(rsp.get("ts").toString()), getApplicationContext());//
-                                //longPollServer(Integer.parseInt(rsp.get("ts").toString()), context, activity_name, scroll);//rsp.get("server").toString(),rsp.get("key").toString(),
+                                LongPollService.start(Integer.parseInt(rsp.get("ts").toString()), token, getApplicationContext());
                             }else{
                                 if(response.contains("invalid access_token (4)")){
                                     //System.out.println(response);

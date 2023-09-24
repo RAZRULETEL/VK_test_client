@@ -15,10 +15,21 @@
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
 
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="#FF0000"
+        android:text="TextView"
+        android:visibility="gone" />
+
     <ImageView
         android:id="@+id/fullscreenContent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:scaleType="fitCenter"
         tools:srcCompat="@tools:sample/avatars" />
 
     <FrameLayout
@@ -37,7 +48,7 @@
             tools:ignore="UselessParent">
 
             <ImageButton
-                android:id="@+id/dummy_button"
+                android:id="@+id/back_button"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
 
@@ -46,10 +57,25 @@
                 tools:ignore="SpeakableTextPresentCheck" />
 
             <ImageButton
-                android:id="@+id/setDefault"
+                android:id="@+id/reset_transform"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
 
+                android:background="@android:color/transparent"
+                app:srcCompat="@android:drawable/ic_menu_revert"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?android:attr/listDivider" />
+
+            <ImageButton
+                android:id="@+id/settings_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:background="@android:color/transparent"
                 app:srcCompat="@android:drawable/ic_menu_manage"
                 tools:ignore="SpeakableTextPresentCheck" />

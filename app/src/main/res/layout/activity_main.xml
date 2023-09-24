@@ -14,7 +14,8 @@
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:translationX="-1dp"
-        android:translationZ="30dp">
+        android:translationZ="30dp"
+        tools:visibility="invisible">
 
         <ScrollView
             android:layout_width="550dp"
@@ -25,38 +26,10 @@
             tools:ignore="SpeakableTextPresentCheck">
 
             <LinearLayout
+                android:id="@+id/tabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <Button
-                    android:id="@+id/news"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#FFFFFF"
-                    android:text="Лента"
-                    android:textAllCaps="false"
-                    android:textColor="#000000" />
-
-                <Button
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#00FFFFFF"
-                    android:backgroundTint="#00FFFFFF"
-                    android:text="Сообщения"
-                    android:textAllCaps="false"
-                    android:textColor="#000000" />
-
-                <Button
-                    android:id="@+id/setts"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#00FFFFFF"
-                    android:backgroundTint="#00FFFFFF"
-                    android:text="Настройки"
-                    android:textAllCaps="false"
-                    android:textColor="#000000" />
-            </LinearLayout>
+                android:orientation="vertical"/>
         </ScrollView>
 
         <Button
@@ -69,23 +42,24 @@
             tools:ignore="SpeakableTextPresentCheck" />
     </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
+    <LinearLayout
+        android:id="@+id/main_tab"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="0dp"
+            android:id="@+id/menu_bar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#00FFFF"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/scrollView2"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <FrameLayout
@@ -100,7 +74,7 @@
                     android:layout_margin="5dp"
                     android:background="#00FFFFFF"
                     android:scaleType="fitXY"
-                    app:srcCompat="@drawable/ricardo1"
+                    app:srcCompat="@drawable/ricardo"
                     tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
                 <TextView
@@ -129,118 +103,12 @@
                 android:shadowDx="1"
                 android:shadowDy="4"
                 android:shadowRadius="5"
-                android:text="Бляблялоги"
+                android:text="Сообщения"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
                 android:textSize="24sp" />
         </LinearLayout>
 
-        <ScrollView
-            android:id="@+id/scrollView2"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-            tools:ignore="SpeakableTextPresentCheck">
-
-            <LinearLayout
-                android:id="@+id/scroll"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/_main_"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:background="@drawable/ripple"
-                    android:foregroundTintMode="add"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/_dynamicImageView_"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        app:srcCompat="@drawable/ic_launcher_foreground" />
-
-                    <LinearLayout
-                        android:id="@+id/_text_layout_"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/_title_layout_"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:id="@+id/_title_"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:text="title"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/_last_time_"
-                                app:layout_constraintHorizontal_bias="0.0"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <TextView
-                                android:id="@+id/_last_time_"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="last_time"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                        <LinearLayout
-                            android:id="@+id/_last_msg_layout_"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:id="@+id/_logo_last_"
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                tools:srcCompat="@tools:sample/avatars" />
-
-                            <TextView
-                                android:id="@+id/_last_msg_"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="10"
-                                android:maxLines="1"
-                                android:text="last_msg" />
-
-                            <TextView
-                                android:id="@+id/_unreadMsgs_"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginRight="20dp"
-                                android:layout_weight="1"
-                                android:maxLines="1"
-                                android:text="U 1" />
-
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="299dp"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:text="TextView"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </ScrollView>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </FrameLayout>
